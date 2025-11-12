@@ -1,44 +1,43 @@
-import { createBrowserRouter } from 'react-router-dom'
-import App from './App'
-import HomePage from './pages/HomePage'
-import ProductsPage from './pages/ProductsPage'
-import Register from './pages/Register'
-import Login from './pages/Login'
-import { ProtectedLayout, AuthLayout } from './components/ProtectedRoute'
+import { createBrowserRouter } from "react-router-dom";
+import App from "./App";
+import HomePage from "./pages/HomePage";
+import ProductsPage from "./pages/ProductsPage";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import { ProtectedLayout, AuthLayout } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <App />,
     children: [
       {
         index: true,
         element: <HomePage />,
       },
+      {
+        path: "products",
+        element: <ProductsPage />,
+      },
       // Protected routes - require authentication
       {
         element: <ProtectedLayout />,
-        children: [
-          {
-            path: 'products',
-            element: <ProductsPage />,
-          },
-        ],
+        children: [],
       },
       // Auth routes - require the user to NOT be authenticated
       {
         element: <AuthLayout />,
         children: [
           {
-            path: 'register',
+            path: "register",
             element: <Register />,
           },
           {
-            path: 'login',
+            path: "login",
             element: <Login />,
           },
         ],
       },
     ],
   },
-])
+]);
