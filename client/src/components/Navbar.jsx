@@ -16,6 +16,7 @@ export default function Navbar() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const loggedIn = useSelector((state) => state.user.loggedIn)
+  const cartCount = useSelector((state) => state.cart?.items?.reduce((s, i) => s + (i.quantity || 0), 0) || 0)
 
   const isActive = (href) => {
     return location.pathname === href
@@ -71,6 +72,12 @@ export default function Navbar() {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            <Link to="/cart" className="relative mr-4 text-gray-200 hover:text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 7h13" />
+              </svg>
+              <span className="ml-1 text-sm">{cartCount}</span>
+            </Link>
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <MenuButton className="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">

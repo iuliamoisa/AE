@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { fetchProducts, deleteProduct } from '../api/product.routes';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { addItem } from '../store/slices/cartSlice';
+import { addCartItem } from '../api/cart.routes';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -12,6 +14,7 @@ export default function ProductsPage() {
   const [deletingId, setDeletingId] = useState(null);
   const user = useSelector((state) => state.user.user);
   const isAdmin = user?.role === 'admin';
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -156,14 +159,37 @@ export default function ProductsPage() {
               <div className="mt-4 flex justify-between">
                 <div>
                   <h3 className="text-sm text-gray-700">
-                    <a href="#" onClick={(e) => e.preventDefault()}>
-                      <span aria-hidden="true" className="absolute inset-0" />
+                    <a href="#" onClick={(e) => e.preventDefault()} className="relative">
+                      <span aria-hidden="true" className="absolute inset-0 pointer-events-none" />
                       {product.name}
                     </a>
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">{product.category}</p>
                 </div>
                 <p className="text-sm font-medium text-gray-900">${product.price}</p>
+              </div>
+              <div className="mt-2 flex justify-between items-center">
+                <button
+                  onClick={async () => {
+                      if (product.stock <= 0) {
+                        toast.error('Product is out of stock');
+                        return;
+                      }
+                      dispatch(addItem({ product, quantity: 1 }));
+                      try {
+                        if (user) {
+                          await addCartItem(product.id, 1);
+                        }
+                      } catch (err) {
+                        console.error('Failed to sync cart to server', err);
+                      }
+                      toast.success('Added to cart');
+                    }}
+                  className="mt-2 inline-flex items-center rounded-md bg-indigo-600 px-3 py-1 text-sm font-semibold text-white hover:bg-indigo-500"
+                >
+                  Add to cart
+                </button>
+                <div className="text-sm text-gray-500">Stock: {product.stock}</div>
               </div>
             </div>
           ))}

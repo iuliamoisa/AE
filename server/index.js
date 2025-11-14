@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
+const cartRoutes = require('./routes/cart.routes');
 
 const PORT = process.env.PORT || 3000;
 
@@ -23,6 +24,7 @@ app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
+app.use('/cart', cartRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server successfully started on port ${PORT}`)
