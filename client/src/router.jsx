@@ -6,6 +6,10 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import CreateProductPage from "./pages/CreateProductPage";
 import EditProductPage from "./pages/EditProductPage";
+import OrdersPage from "./pages/OrdersPage";
+import CreateOrderPage from "./pages/CreateOrderPage";
+import EditOrderPage from "./pages/EditOrderPage";
+import UserProfilePage from "./pages/UserProfilePage";
 import { ProtectedLayout, AuthLayout } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 
@@ -25,7 +29,24 @@ export const router = createBrowserRouter([
       // Protected routes - require authentication
       {
         element: <ProtectedLayout />,
-        children: [],
+        children: [
+          {
+            path: "orders",
+            element: <OrdersPage />,
+          },
+          {
+            path: "orders/create",
+            element: <CreateOrderPage />,
+          },
+          {
+            path: "orders/edit/:id",
+            element: <EditOrderPage />,
+          },
+          {
+            path: "profile",
+            element: <UserProfilePage />,
+          },
+        ],
       },
       // Admin routes - require authentication AND admin role
       {

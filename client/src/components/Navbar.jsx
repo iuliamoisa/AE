@@ -8,6 +8,7 @@ import { classNames } from '../utils/tailwind'
 const navigation = [
   { name: 'Homepage', href: '/' },
   { name: 'Products', href: '/products' },
+  { name: 'Orders', href: '/orders', protected: true },
 ]
 
 export default function Navbar() {
@@ -28,6 +29,8 @@ export default function Navbar() {
       navigate('/login')
     }
   }
+
+  const visibleNavigation = navigation.filter(item => !item.protected || loggedIn)
   return (
     <Disclosure as="nav" className="relative bg-gray-800">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -51,7 +54,7 @@ export default function Navbar() {
             </div>
             <div className="hidden sm:ml-6 sm:block">
               <div className="flex space-x-4">
-                {navigation.map((item) => (
+                {visibleNavigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -80,22 +83,26 @@ export default function Navbar() {
                 transition
                 className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
               >
-                <MenuItem>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
-                  >
-                    Your profile
-                  </a>
-                </MenuItem>
-                <MenuItem>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
-                  >
-                    Settings
-                  </a>
-                </MenuItem>
+                {loggedIn && (
+                  <>
+                    <MenuItem>
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden hover:bg-gray-100"
+                      >
+                        Your profile
+                      </Link>
+                    </MenuItem>
+                    <MenuItem>
+                      <Link
+                        to="/orders"
+                        className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden hover:bg-gray-100"
+                      >
+                        My orders
+                      </Link>
+                    </MenuItem>
+                  </>
+                )}
                 <MenuItem>
                   <button
                     onClick={handleAuthClick}
@@ -112,11 +119,11 @@ export default function Navbar() {
 
       <DisclosurePanel className="sm:hidden">
         <div className="space-y-1 px-2 pt-2 pb-3">
-          {navigation.map((item) => (
+          {visibleNavigation.map((item) => (
             <DisclosureButton
               key={item.name}
-              as="a"
-              href={item.href}
+              as={Link}
+              to={item.href}
               aria-current={isActive(item.href) ? 'page' : undefined}
               className={classNames(
                 isActive(item.href) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-white/5 hover:text-white',
