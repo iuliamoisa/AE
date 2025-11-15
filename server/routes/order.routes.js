@@ -6,6 +6,10 @@ const router = express.Router();
 
 // Get all orders (admin only - can view all orders)
 router.get('/', verifyToken, async (req, res) => {
+    if (req.userRole !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Admins only', data: {} });
+}
+
     try {
         const orders = await Order.findAll({
             include: [
@@ -98,6 +102,8 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 // Create new order with items
 router.post('/', verifyToken, async (req, res) => {
+    const t = await Order.sequelize.transaction();  
+
     try {
         const userId = req.userId;
         const { items, status } = req.body;
@@ -106,47 +112,59 @@ router.post('/', verifyToken, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order must contain at least one item', data: {} });
         }
 
-        // Validate items and calculate total price
         let totalPrice = 0;
-        for (const item of items) {
-            if (!item.productId || !item.quantity || item.quantity < 1) {
-                return res.status(400).json({ success: false, message: 'Each item must have productId and quantity >= 1', data: {} });
-            }
+        const productsMap = {};
 
-            const product = await Product.findByPk(item.productId);
+        for (const item of items) {
+            const product = await Product.findByPk(item.productId, { transaction: t });
+
             if (!product) {
+                await t.rollback();
                 return res.status(400).json({ success: false, message: `Product ${item.productId} not found`, data: {} });
             }
 
-            if (product.stock < item.quantity) {
-                return res.status(400).json({ success: false, message: `Insufficient stock for product ${product.name}`, data: {} });
+            if (item.quantity < 1) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Quantity must be >= 1', data: {} });
             }
+
+            if (product.stock < item.quantity) {
+                await t.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient stock for product ${product.name}`,
+                    data: {}
+                });
+            }
+
+            productsMap[item.productId] = product;
 
             totalPrice += product.price * item.quantity;
         }
 
-        // Create the order
         const order = await Order.create({
             userId,
             totalPrice,
             status: status || 'pending',
             orderDate: new Date(),
-        });
+        }, { transaction: t });
 
-        // Create order items
-        const orderItems = [];
         for (const item of items) {
-            const product = await Product.findByPk(item.productId);
-            const orderItem = await OrderItem.create({
+            const product = productsMap[item.productId];
+
+            await OrderItem.create({
                 orderId: order.id,
-                productId: item.productId,
+                productId: product.id,
                 quantity: item.quantity,
                 price: product.price,
-            });
-            orderItems.push(orderItem);
+            }, { transaction: t });
+
+            product.stock -= item.quantity;
+            await product.save({ transaction: t });
         }
 
-        // Fetch the complete order with items
+        await t.commit();
+
         const completeOrder = await Order.findByPk(order.id, {
             include: [
                 {
@@ -164,10 +182,13 @@ router.post('/', verifyToken, async (req, res) => {
         });
 
         res.status(201).json({ success: true, message: 'Order created successfully', data: completeOrder });
+
     } catch (error) {
+        await t.rollback();
         res.status(500).json({ success: false, message: 'Error creating order', data: error.message });
     }
 });
+
 
 // Update order (status and items)
 router.put('/:id', verifyToken, async (req, res) => {
